@@ -1,0 +1,10 @@
+C:\Users\ed\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\SqlServerTddHelper.dll
+C:\Users\ed\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\SqlServerTddHelper.pkgdef
+C:\Users\ed\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\extension.vsixmanifest
+C:\Users\ed\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\SqlServerTddHelper.pdb
+C:\Users\Edward.Elliott\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\SqlServerTddHelper.dll
+C:\Users\Edward.Elliott\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\TSQLHelper.dll
+C:\Users\Edward.Elliott\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\SqlServerTddHelper.pkgdef
+C:\Users\Edward.Elliott\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\extension.vsixmanifest
+C:\Users\Edward.Elliott\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\SqlServerTddHelper.pdb
+C:\Users\Edward.Elliott\AppData\Local\Microsoft\VisualStudio\12.0Exp\Extensions\GoEddieUk\SqlServerTddHelper\0.1\\TSQLHelper.pdb

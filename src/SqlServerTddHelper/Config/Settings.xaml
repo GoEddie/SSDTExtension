@@ -1,0 +1,9 @@
+﻿<Window x:Class="GoEddieUk.SqlServerTddHelper.Config.Settings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings" Height="300" Width="300">
+    <Grid>
+        <Label Content="Label" HorizontalAlignment="Left" Margin="64,112,0,0" VerticalAlignment="Top"/>
+
+    </Grid>
+</Window>
