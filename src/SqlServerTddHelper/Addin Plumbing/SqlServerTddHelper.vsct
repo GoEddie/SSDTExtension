@@ -17,20 +17,23 @@
       </Group>
     </Groups>
     <Buttons>
+      
+      
 
       <Button guid="guidToolsOptionsCmdSet" id="cmdidGEUKConfigureDeploy" priority="0x0100" type="Button">
         <Parent guid="guidToolsOptionsCmdSet" id="MyMenuGroupToolsMenu" />
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>Configure File Deployment</ButtonText>
+          <ButtonText>Configure Sql Tdd Extender</ButtonText>
         </Strings>
       </Button>
-
+      
+      
       <Button guid="guidGenScriptCmdSet" id="cmdidGEUKGenScript" priority="0x0100" type="Button">
         <Parent guid="guidGenScriptCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>Generate Script</ButtonText>
+          <ButtonText>Generate Deploy Script</ButtonText>
         </Strings>
       </Button>
 
@@ -42,6 +45,9 @@
           <ButtonText>Deploy File</ButtonText>
         </Strings>
       </Button>
+    
+    
+      
     </Buttons>
     <!--<Bitmaps>
       <Bitmap guid="guidImages" href="Addin Plumbing\Resources\Images.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows"/>      

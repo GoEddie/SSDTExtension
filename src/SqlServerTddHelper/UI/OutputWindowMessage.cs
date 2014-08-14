@@ -13,20 +13,24 @@ namespace GoEddieUk.SqlServerTddHelper.UI
 {
     class OutputWindowMessage
     {
-        public void WriteMessage(string message)
+        public static void WriteMessage(string message)
         {
+            try
+            {
+                var outputWindow = Package.GetGlobalService(typeof (SVsOutputWindow)) as IVsOutputWindow;
 
-            IVsOutputWindow outputWindow =
-            Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+                var guidGeneral = Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
+                IVsOutputWindowPane pane;
+                var hr = outputWindow.CreatePane(guidGeneral, "General", 1, 0);
+                hr = outputWindow.GetPane(guidGeneral, out pane);
+                pane.Activate();
+                pane.OutputString(message + "\r\n");
 
-            Guid guidGeneral = Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
-            IVsOutputWindowPane pane;
-            int hr = outputWindow.CreatePane(guidGeneral, "General", 1, 0);
-            hr = outputWindow.GetPane(guidGeneral, out pane);
-            pane.Activate();
-            pane.OutputString(message);
-
-
+            }
+            catch (Exception e)
+            {
+                
+            }
         }
 
     }

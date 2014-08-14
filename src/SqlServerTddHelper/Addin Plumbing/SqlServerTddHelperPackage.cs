@@ -1,18 +1,19 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Globalization;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.ComponentModel.Design;
 using System.Text;
-using Microsoft.Win32;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Shell;
+using System.Transactions;
 using EnvDTE;
+using GoEddieUk.SqlServerTddHelper.Config;
+using GoEddieUk.SqlServerTddHelper.DirtyVSApi;
+using GoEddieUk.SqlServerTddHelper.Gateways;
+using GoEddieUk.SqlServerTddHelper.UI;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using TSQLHelper;
-
 
 namespace GoEddieUk.SqlServerTddHelper
 {
@@ -22,10 +23,6 @@ namespace GoEddieUk.SqlServerTddHelper
     [Guid(GuidList.guidSqlServerTddHelperPkgString)]
     public sealed class SqlServerTddHelperPackage : Package
     {
-        public SqlServerTddHelperPackage()
-        {
-        }
-                
         protected override void Initialize()
         {
             base.Initialize();
@@ -33,53 +30,51 @@ namespace GoEddieUk.SqlServerTddHelper
             AddCommandHandler();
         }
 
-        private void AddCommandHandler(){
-             
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if ( null != mcs )
-            {
-                CommandID menuCommandID2 = new CommandID(GuidList.guidToolsOptionsCmdSet, (int)PkgCmdIDList.cmdidGEUKConfigureDeploy);
-                MenuCommand menuItem2 = new MenuCommand(MenuItemCallback2, menuCommandID2);
-                mcs.AddCommand(menuItem2);
+        private void AddCommandHandler()
+        {
+            var mcs = GetService(typeof (IMenuCommandService)) as OleMenuCommandService;
+            if (null == mcs) 
+                return;
 
-                CommandID menuCommandID = new CommandID(GuidList.guidSqlServerTddHelperCmdSet, (int)PkgCmdIDList.cmdidGEUKDeployFile);
-                MenuCommand menuItem = new MenuCommand(MenuItemCallback, menuCommandID );
-                mcs.AddCommand( menuItem );
 
-                CommandID menuCommandID3 = new CommandID(GuidList.guidGenScriptCmdSet, (int)PkgCmdIDList.cmdidGEUKGenScript);
-                MenuCommand menuItem3 = new MenuCommand(MenuItemCallback3, menuCommandID3);
-                mcs.AddCommand(menuItem3);
+            CreateMenuItem(mcs, GuidList.guidToolsOptionsCmdSet, (int) PkgCmdIDList.cmdidGEUKConfigureDeploy, ShowToolsOptions);
+            CreateMenuItem(mcs, GuidList.guidSqlServerTddHelperCmdSet, (int) PkgCmdIDList.cmdidGEUKDeployFile, DeploySingleFile);
+            CreateMenuItem(mcs, GuidList.guidGenScriptCmdSet, (int) PkgCmdIDList.cmdidGEUKGenScript, GenerateScript);
+        }
 
-            }
-
+        private void CreateMenuItem(OleMenuCommandService mcs, Guid cmdsetGuid, int cmdId, EventHandler callback)
+        {
+            var commandId = new CommandID(cmdsetGuid, cmdId);
+            var menuCommand = new MenuCommand(callback, commandId);
+            mcs.AddCommand(menuCommand);
         }
 
         private string GetSelectedSolutionExplorerFileName()
         {
-            var dte = GetService(typeof(SDTE)) as EnvDTE.DTE;
-            
+            var dte = GetService(typeof (SDTE)) as DTE;
+
             try
             {
                 var filename = dte.SelectedItems.Item(1).ProjectItem.FileNames[0];
-            
+
                 return filename;
+             
             }
             catch (Exception ex)
             {
-                new UI.OutputWindowMessage().WriteMessage(string.Format("error: " + ex));
+                OutputWindowMessage.WriteMessage(string.Format("error: " + ex));
             }
 
             return null;
         }
 
-        string get_last_part_of_name(string proc_name)
+        private string GetLastPartOfName(string procName)
         {
-            var parts = proc_name.Replace("\"", "").Replace("[", "").Replace("]", "").Split(new[] { '.' });
+            var parts = procName.Replace("\"", "").Replace("[", "").Replace("]", "").Split(new[] {'.'});
             return parts[parts.Length - 1];
-
         }
 
-        private void MenuItemCallback3(object sender, EventArgs e)
+        private void GenerateScript(object sender, EventArgs e)
         {
             try
             {
@@ -88,91 +83,91 @@ namespace GoEddieUk.SqlServerTddHelper
 
                 if (String.IsNullOrEmpty(filename))
                 {
-                    new UI.OutputWindowMessage().WriteMessage("Couldn't get filename");
+                    OutputWindowMessage.WriteMessage("Couldn't GetConfig filename");
                     return;
                 }
 
                 if (!filename.EndsWith(".sql"))
                 {
-                    new UI.OutputWindowMessage().WriteMessage("This only works with .sql files - boo hoo hoo");
+                    OutputWindowMessage.WriteMessage("This only works with .sql files - boo hoo hoo");
                     return;
                 }
 
                 var procname = new ScriptProperties().GetProcNameFromSqlFile(filename);
                 if (string.IsNullOrEmpty(procname))
                 {
-                    new UI.OutputWindowMessage().WriteMessage("Couldn't get proc name - boo hoo hoo");
+                    OutputWindowMessage.WriteMessage("Couldn't GetConfig proc name - boo hoo hoo");
                     return;
                 }
+                var settings = Config.Configuration.GetSettings(project);
 
-                WriteDeployeFile(procname, filename, new FileInfo(project.FullName).DirectoryName);
-
+                WriteDeployFile(procname, filename, settings.DeploymentFolder);
             }
             catch (Exception)
             {
-                new UI.OutputWindowMessage().WriteMessage("Please select a project to configure");
+                OutputWindowMessage.WriteMessage("Unable to generate script");
             }
-
         }
 
-        private void WriteDeployeFile(string procname, string proc_file, string output_dir)
+        private void WriteDeployFile(string procName, string procFile, string outputDir)
         {
-
-            var script = GetFileContents(proc_file);
+            var script = GetFileContents(procFile);
             if (string.IsNullOrEmpty(script))
             {
-                new UI.OutputWindowMessage().WriteMessage("Could not read script file: " + proc_file);
+                OutputWindowMessage.WriteMessage("Could not read script file: " + procFile);
                 return;
             }
 
-            var output_script = new StringBuilder();
-            output_script.AppendFormat(SqlStrings.DropExistingProc, get_last_part_of_name(procname), procname);
-            output_script.AppendFormat(SqlStrings.Script, script);
-            
-            var output_script_path = Path.Combine(output_dir, string.Format("{0}.sql", get_last_part_of_name(procname)));
+            var outputScript = new StringBuilder();
+            outputScript.AppendFormat(SqlStrings.DropExistingProc, GetLastPartOfName(procName), procName);
+            outputScript.AppendLine("\r\nGO\r\n");
+            outputScript.AppendFormat(SqlStrings.Script, script);
+
+            string outputScriptPath = Path.Combine(outputDir,
+                string.Format("{0}.sql", GetLastPartOfName(procName)));
 
             try
             {
-                WriteFileContents(output_script_path, output_script.ToString());
-                new UI.OutputWindowMessage().WriteMessage("Written file: " + output_script_path);
+                WriteFileContents(outputScriptPath, outputScript.ToString());
+                OutputWindowMessage.WriteMessage("Written file: " + outputScriptPath);
             }
             catch (Exception e)
             {
-                new UI.OutputWindowMessage().WriteMessage("Could not write file: " + output_script_path + " - error: " + e.Message);
-                return;
+                OutputWindowMessage.WriteMessage("Could not write file: " + outputScriptPath + " - error: " +
+                                                 e.Message);
             }
         }
 
-        private void WriteFileContents(string file_name, string contents)
+        private void WriteFileContents(string fileName, string contents)
         {
-            using (var writer = new StreamWriter(file_name))
+            using (var writer = new StreamWriter(fileName))
             {
                 writer.Write(contents);
             }
         }
 
-        private string GetFileContents(string proc_file)
+        private string GetFileContents(string procFile)
         {
-            using (var reader = new StreamReader(proc_file))
+            using (var reader = new StreamReader(procFile))
             {
                 return reader.ReadToEnd();
             }
         }
 
 
-        private void MenuItemCallback2(object sender, EventArgs e)
+        private void ShowToolsOptions(object sender, EventArgs e)
         {
             try
             {
                 var project = GetCurrentProject();
-               
+
+                Config.Configuration.ShowConfig(project);
 
             }
             catch (Exception)
             {
-                new UI.OutputWindowMessage().WriteMessage("Please select a project to configure");
+                OutputWindowMessage.WriteMessage("Configuration Failed");
             }
-            
         }
 
         private Project GetCurrentProject()
@@ -182,38 +177,105 @@ namespace GoEddieUk.SqlServerTddHelper
             IVsMultiItemSelect multiItemSelect;
             uint projectItemId;
 
-            IVsMonitorSelection monitorSelection =
-                    (IVsMonitorSelection)Package.GetGlobalService(
-                    typeof(SVsShellMonitorSelection));
+            var monitorSelection =
+                (IVsMonitorSelection) GetGlobalService(
+                    typeof (SVsShellMonitorSelection));
 
             monitorSelection.GetCurrentSelection(out hierarchyPointer,
-                                                 out projectItemId,
-                                                 out multiItemSelect,
-                                                 out selectionContainerPointer);
+                out projectItemId,
+                out multiItemSelect,
+                out selectionContainerPointer);
 
-            IVsHierarchy selectedHierarchy = Marshal.GetTypedObjectForIUnknown(
-                                                 hierarchyPointer,
-                                                 typeof(IVsHierarchy)) as IVsHierarchy;
+            var selectedHierarchy = Marshal.GetTypedObjectForIUnknown(
+                hierarchyPointer,
+                typeof (IVsHierarchy)) as IVsHierarchy;
 
             if (selectedHierarchy != null)
             {
                 ErrorHandler.ThrowOnFailure(selectedHierarchy.GetProperty(
-                                                  projectItemId,
-                                                  (int)__VSHPROPID.VSHPROPID_ExtObject,
-                                                  out selectedObject));
+                    projectItemId,
+                    (int) __VSHPROPID.VSHPROPID_ExtObject,
+                    out selectedObject));
             }
 
-                Project selectedProject = ((selectedObject as dynamic).ProjectItems.ContainingProject) as EnvDTE.Project;
 
-                return selectedProject;
-            
-         }
+            var selectedProject = ((selectedObject as dynamic).ProjectItems.ContainingProject) as Project;
 
-        private void MenuItemCallback(object sender, EventArgs e)
-        {
-            // Show a Message Box to prove we were here
-            //new UI.AlertBox(GetService(typeof(SVsUIShell)) as IVsUIShell).ShowMessage("Hello");
+            return selectedProject;
         }
 
+        private void DeploySingleFile(object sender, EventArgs e)
+        {
+            try
+            {
+                var project = GetCurrentProject();
+
+                var variables = new SsdtVariableProvider().GetVariables(project.FullName);
+
+                var settings = Config.Configuration.GetSettings(project);
+
+                var filename = GetSelectedSolutionExplorerFileName();
+
+                if (String.IsNullOrEmpty(filename))
+                {
+                    OutputWindowMessage.WriteMessage("Couldn't GetConfig filename");
+                    return;
+                }
+
+                if (!filename.EndsWith(".sql"))
+                {
+                    OutputWindowMessage.WriteMessage("Single file deploy only works with .sql files - boo hoo hoo");
+                    return;
+                }
+
+                var procname = new ScriptProperties().GetProcNameFromSqlFile(filename);
+
+                if (string.IsNullOrEmpty(procname))
+                {
+                    OutputWindowMessage.WriteMessage("Couldn't GetConfig proc name - boo hoo hoo");
+                    return;
+                }
+
+                var fileContents = GetFileContents(filename);
+
+                foreach (SqlCmdVariable v in variables)
+                {
+                    fileContents = fileContents.Replace(v.Name, v.Value);
+                }
+
+                var outputScript = new StringBuilder();
+                outputScript.AppendFormat(SqlStrings.DropExistingProc, GetLastPartOfName(procname), procname);
+                outputScript.AppendFormat(SqlStrings.Script, fileContents);
+                using (var scope = new TransactionScope())
+                {
+                    try
+                    {
+                        new SqlGateway(settings.ConnectionString).Execute(
+                            string.Format(SqlStrings.DropExistingProc, GetLastPartOfName(procname), procname));
+                        new SqlGateway(settings.ConnectionString).Execute(string.Format(SqlStrings.Script, fileContents));
+
+                        scope.Complete();
+
+
+                        OutputWindowMessage.WriteMessage(string.Format("Deployed File: {0}\r\n", filename));
+                    }
+                    catch (NullReferenceException)
+                    {
+                        OutputWindowMessage.WriteMessage(string.Format("Unable to deploy file {0}\r\n",filename));
+                    }
+                    catch (Exception ex)
+                    {
+                        
+                        OutputWindowMessage.WriteMessage(string.Format("Unable to deploy file {0} error : {1}\r\n",
+                            filename, ex.Message));
+                    }
+                }
+
+            }
+            catch (Exception)
+            {
+                OutputWindowMessage.WriteMessage("Deploying file Failed");
+            }
+        }
     }
-}
+}   

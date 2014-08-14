@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<settings>
+  <connection_string>SERVER=.;integrated security=sspi;initial catalog=CONNECTIONS;</connection_string>
+  <use_default_sql_cmd_vars>true</use_default_sql_cmd_vars>
+</settings>

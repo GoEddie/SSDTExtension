@@ -3,13 +3,7 @@
     internal static class SqlStrings
     {
         public static string DropExistingProc =
-            @"
-if exists(select * from sys.procedures where name = '{0}')
-begin
-    drop proc {1}
-end 
-
-";
+            "\r\nif exists(select * from sys.procedures where name = '{0}')\r\nbegin\r\n\tdrop proc {1}\r\n\r\nend\r\n";
 
         public static string Script =
             @"
