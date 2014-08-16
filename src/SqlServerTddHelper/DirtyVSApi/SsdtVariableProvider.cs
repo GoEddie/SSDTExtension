@@ -20,7 +20,7 @@ namespace GoEddieUk.SqlServerTddHelper.DirtyVSApi
             {
                 variables.Add(new SqlCmdVariable
                 {
-                    Name = string.Format("(${0})", node.Attributes["Include"].Value),
+                    Name = string.Format("$({0})", node.Attributes["Include"].Value),
                     Value = node.SelectSingleNode(".//DefaultValue").InnerText
                 });
             }
