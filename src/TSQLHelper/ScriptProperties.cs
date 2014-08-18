@@ -15,61 +15,52 @@ namespace TSQLHelper
         public string GetProcNameFromSqlFile(string filename)
         {
 
-            TextReader txtRdr = new StreamReader(filename);
-            TSql110Parser parser = new TSql110Parser(true);
+            var txtRdr = new StreamReader(filename);
+            var parser = new TSql110Parser(true);
 
             IList<ParseError> errors;
-            TSqlFragment sqlFragment = parser.Parse(txtRdr, out errors);
-
-            var in_procedure = false;
-            var in_name = false;
-            string name = "";
+            var sqlFragment = parser.Parse(txtRdr, out errors);
+            
+            var inName = false;
+            var name = "";
 
             foreach (var a in sqlFragment.ScriptTokenStream)
             {
-                Console.WriteLine(a.TokenType + " " + a.Text);
-
+                
                 switch (a.TokenType)
                 {
                     case TSqlTokenType.Procedure:
-                        in_procedure = true;
+                      
                         break;
                     case TSqlTokenType.QuotedIdentifier:
                     case TSqlTokenType.Identifier:
                     case TSqlTokenType.Dot:
-                        in_name = true;
+                        inName = true;
                         name += a.Text;
 
 
                         break;
 
                     case TSqlTokenType.WhiteSpace:
-                        if (in_name)
+                        if (inName)
                             return name;
                         break;
                     default:
-                        in_procedure = false;
+                      
                         break;
                 }
 
             }
 
-            var error_message = "could not find proc name, are these errors anything to do with it?: " + get_errors(errors);
-            throw new Exception(error_message);
+            var errorMessage = "could not find proc name, are these errors anything to do with it?: " + get_errors(errors);
+            throw new Exception(errorMessage);
         }
 
 
-        string get_errors(IList<ParseError> errors)
+        string get_errors(IEnumerable<ParseError> errors)
         {
-
-            string ret = "";
-            foreach (var err in errors)
-            {
-                ret += " + " + err.Message;
-            }
-            return ret;
+            return errors.Aggregate("", (current, err) => current + (" + " + err.Message));
         }
-
     }
 
 
