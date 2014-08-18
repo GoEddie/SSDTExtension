@@ -4,6 +4,7 @@ using System.ComponentModel.Design;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Transactions;
 using EnvDTE;
 using GoEddieUk.SqlServerTddHelper.Config;
@@ -38,8 +39,8 @@ namespace GoEddieUk.SqlServerTddHelper
 
 
             CreateMenuItem(mcs, GuidList.guidToolsOptionsCmdSet, (int) PkgCmdIDList.cmdidGEUKConfigureDeploy, ShowToolsOptions);
-            CreateMenuItem(mcs, GuidList.guidSqlServerTddHelperCmdSet, (int) PkgCmdIDList.cmdidGEUKDeployFile, DeploySingleFile);
-            CreateMenuItem(mcs, GuidList.guidGenScriptCmdSet, (int) PkgCmdIDList.cmdidGEUKGenScript, GenerateScript);
+            CreateMenuItem(mcs, GuidList.guidSqlServerTddHelperCmdSet, (int) PkgCmdIDList.cmdidGEUKDeployFile, DeploySingleFileCallback);
+            CreateMenuItem(mcs, GuidList.guidGenScriptCmdSet, (int) PkgCmdIDList.cmdidGEUKGenScript, GenerateScriptCallback);
         }
 
         private void CreateMenuItem(OleMenuCommandService mcs, Guid cmdsetGuid, int cmdId, EventHandler callback)
@@ -74,11 +75,25 @@ namespace GoEddieUk.SqlServerTddHelper
             return parts[parts.Length - 1];
         }
 
-        private void GenerateScript(object sender, EventArgs e)
+        private void GenerateScriptCallback(object sender, EventArgs e)
         {
             try
             {
                 var project = GetCurrentProject();
+                ThreadPool.QueueUserWorkItem(GenerateScript, project);
+            }
+            catch (Exception)
+            {
+                OutputWindowMessage.WriteMessage("Unable to generate script");
+            }
+        }
+
+        private void GenerateScript(object state)
+        {
+            try
+            {
+                var project = state as Project;
+
                 var filename = GetSelectedSolutionExplorerFileName();
 
                 if (String.IsNullOrEmpty(filename))
@@ -102,6 +117,7 @@ namespace GoEddieUk.SqlServerTddHelper
                 var settings = Config.Configuration.GetSettings(project);
 
                 WriteDeployFile(procname, filename, settings.DeploymentFolder);
+                
             }
             catch (Exception)
             {
@@ -204,11 +220,25 @@ namespace GoEddieUk.SqlServerTddHelper
             return selectedProject;
         }
 
-        private void DeploySingleFile(object sender, EventArgs e)
+        private void DeploySingleFileCallback(object sender, EventArgs e)
         {
             try
             {
                 var project = GetCurrentProject();
+
+                ThreadPool.QueueUserWorkItem(DeploySingleFile, project);
+            }
+            catch (Exception)
+            {
+                OutputWindowMessage.WriteMessage("Deploying file Failed");
+            }
+        }
+
+        private void DeploySingleFile(object state)
+        {
+            try
+            {
+                var project = state as Project;
 
                 var variables = new SsdtVariableProvider().GetVariables(project.FullName);
 
@@ -261,21 +291,20 @@ namespace GoEddieUk.SqlServerTddHelper
                     }
                     catch (NullReferenceException)
                     {
-                        OutputWindowMessage.WriteMessage(string.Format("Unable to deploy file {0}\r\n",filename));
+                        OutputWindowMessage.WriteMessage(string.Format("Unable to deploy file {0}\r\n", filename));
                     }
                     catch (Exception ex)
                     {
-                        
                         OutputWindowMessage.WriteMessage(string.Format("Unable to deploy file {0} error : {1}\r\n",
                             filename, ex.Message));
                     }
                 }
-
             }
             catch (Exception)
             {
                 OutputWindowMessage.WriteMessage("Deploying file Failed");
             }
+
         }
     }
 }   
