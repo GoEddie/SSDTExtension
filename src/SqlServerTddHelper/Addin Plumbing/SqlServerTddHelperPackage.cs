@@ -153,8 +153,7 @@ namespace GoEddieUk.SqlServerTddHelper
             }
             catch (Exception e)
             {
-                OutputWindowMessage.WriteMessage("Could not write file: " + outputScriptPath + " - error: " +
-                                                 e.Message);
+                OutputWindowMessage.WriteMessage("Could not write file: " + outputScriptPath + " - error: " + e.Message);
             }
         }
 

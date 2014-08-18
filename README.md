@@ -22,6 +22,6 @@ The config is stored in the root of the SSDT project called rather grandly "SSDT
 The reason for this is that it takes ages to build and deploy singel files as part of the tdd t-sql approach and this makes my life easier. Please fork and improve.
 
 
-To install, either download the code and run the visual studio project (you will need the 2013 visual studio sdk) - or download the /download/0.1/SqlServerTddHelper.vsix and run it on a machine with visual studio 2013 installed. 
+To install, either download the code and run the visual studio project (you will need the 2013 visual studio sdk) - or download the /download/0.3/SqlServerTddHelper.vsix and run it on a machine with visual studio 2013 installed. 
 
 
