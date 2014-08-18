@@ -117,7 +117,7 @@ namespace GoEddieUk.SqlServerTddHelper
                 }
                 var settings = Config.Configuration.GetSettings(project);
 
-                WriteDeployFile(procname, filename, settings.DeploymentFolder);
+                WriteDeployFile(project.FullName, procname, filename, settings.DeploymentFolder);
                 
             }
             catch (Exception)
@@ -126,13 +126,20 @@ namespace GoEddieUk.SqlServerTddHelper
             }
         }
 
-        private void WriteDeployFile(string procName, string procFile, string outputDir)
+        private void WriteDeployFile(string projectFile, string procName, string procFile, string outputDir)
         {
             var script = GetFileContents(procFile);
             if (string.IsNullOrEmpty(script))
             {
                 OutputWindowMessage.WriteMessage("Could not read script file: " + procFile);
                 return;
+            }
+
+            var variables = new SsdtVariableProvider().GetVariables(projectFile);
+
+            foreach (SqlCmdVariable v in variables)
+            {
+                script = script.Replace(v.Name, v.Value);
             }
 
             var outputScript = new StringBuilder();
