@@ -2,3 +2,4 @@
 **/bin/**
 **/release/**
 **/debug/**
+*.suo

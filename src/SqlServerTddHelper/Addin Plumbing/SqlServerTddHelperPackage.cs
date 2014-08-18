@@ -70,11 +70,7 @@ namespace GoEddieUk.SqlServerTddHelper
             return null;
         }
 
-        private string GetLastPartOfName(string procName)
-        {
-            var parts = procName.Replace("\"", "").Replace("[", "").Replace("]", "").Split(new[] {'.'});
-            return parts[parts.Length - 1];
-        }
+        
 
         private void GenerateScriptCallback(object sender, EventArgs e)
         {
@@ -143,12 +139,12 @@ namespace GoEddieUk.SqlServerTddHelper
             }
 
             var outputScript = new StringBuilder();
-            outputScript.AppendFormat(SqlStrings.DropExistingProc, GetLastPartOfName(procName), procName);
+            outputScript.AppendFormat(DeploymentScriptGenerator.BuildDropStatment(script));
             outputScript.AppendLine("\r\nGO\r\n");
-            outputScript.AppendFormat(SqlStrings.Script, script);
+            outputScript.AppendFormat(script);
 
             string outputScriptPath = Path.Combine(outputDir,
-                string.Format("{0}.sql", GetLastPartOfName(procName)));
+                string.Format("{0}.sql", DeploymentScriptGenerator.GetLastPartOfName(procName)));
 
             try
             {
@@ -281,9 +277,6 @@ namespace GoEddieUk.SqlServerTddHelper
                     fileContents = fileContents.Replace(v.Name, v.Value);
                 }
 
-                var outputScript = new StringBuilder();
-                outputScript.AppendFormat(SqlStrings.DropExistingProc, GetLastPartOfName(procname), procname);
-                outputScript.AppendFormat(SqlStrings.Script, fileContents);
 
                 if (!DtcAvailable())
                 {
@@ -295,9 +288,8 @@ namespace GoEddieUk.SqlServerTddHelper
                 {
                     try
                     {
-                        new SqlGateway(settings.ConnectionString).Execute(
-                            string.Format(SqlStrings.DropExistingProc, GetLastPartOfName(procname), procname));
-                        new SqlGateway(settings.ConnectionString).Execute(string.Format(SqlStrings.Script, fileContents));
+                        new SqlGateway(settings.ConnectionString).Execute(DeploymentScriptGenerator.BuildDropStatment(fileContents));
+                        new SqlGateway(settings.ConnectionString).Execute(fileContents);
 
                         scope.Complete();
 

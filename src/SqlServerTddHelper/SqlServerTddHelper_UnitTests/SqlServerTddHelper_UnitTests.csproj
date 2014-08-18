@@ -67,13 +67,18 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\TSQLHelper\TSQLHelper.csproj">
+      <Project>{A83CDE94-DDFF-440E-B27E-33B25C2283C4}</Project>
+      <Name>TSQLHelper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SqlServerTddHelper.csproj">
       <Project>{F95E5662-4711-4EF6-BB29-7865927C3CA3}</Project>
       <Name>SqlServerTddHelper</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="NewFolder1\" />
+    <Compile Include="DeploymentScriptGenerator\DeploymentScriptGeneratorTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

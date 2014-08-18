@@ -50,8 +50,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeploymentScriptGenerator.cs" />
     <Compile Include="ScriptProperties.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TSqlDeploymentException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="trtr.snk" />

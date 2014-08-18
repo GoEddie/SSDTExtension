@@ -18,13 +18,13 @@ namespace TSQLHelper
     public class ScriptProperties
     {
 
-        public ScriptDetail GetScriptDetail(string filename)
+        public static ScriptDetail GetScriptDetail(string script)
         {
-            var txtRdr = new StreamReader(filename);
+            var reader = new StringReader(script);
             var parser = new TSql110Parser(true);
 
             IList<ParseError> errors;
-            var sqlFragment = parser.Parse(txtRdr, out errors);
+            var sqlFragment = parser.Parse(reader, out errors);
 
             var inName = false;
             var name = "";
