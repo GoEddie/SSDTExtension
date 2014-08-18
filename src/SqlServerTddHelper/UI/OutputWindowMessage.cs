@@ -26,6 +26,8 @@ namespace GoEddieUk.SqlServerTddHelper.UI
                 pane.Activate();
                 pane.OutputString(message + "\r\n");
 
+                pane.Activate();
+
             }
             catch (Exception e)
             {

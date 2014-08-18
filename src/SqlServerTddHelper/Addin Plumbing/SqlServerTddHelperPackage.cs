@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Transactions;
@@ -276,6 +277,13 @@ namespace GoEddieUk.SqlServerTddHelper
                 var outputScript = new StringBuilder();
                 outputScript.AppendFormat(SqlStrings.DropExistingProc, GetLastPartOfName(procname), procname);
                 outputScript.AppendFormat(SqlStrings.Script, fileContents);
+
+                if (!DtcAvailable())
+                {
+                    OutputWindowMessage.WriteMessage("Unable to deploy file, deploy uses msdtc to protect changes. Please ensure the service is enabled and running");
+                    return;
+                }
+                
                 using (var scope = new TransactionScope())
                 {
                     try
@@ -305,6 +313,13 @@ namespace GoEddieUk.SqlServerTddHelper
                 OutputWindowMessage.WriteMessage("Deploying file Failed");
             }
 
+        }
+
+        private bool DtcAvailable()
+        {
+            var controller = new ServiceController();
+            controller.ServiceName = "msdtc";
+            return (controller.Status == ServiceControllerStatus.Running);
         }
     }
 }   
