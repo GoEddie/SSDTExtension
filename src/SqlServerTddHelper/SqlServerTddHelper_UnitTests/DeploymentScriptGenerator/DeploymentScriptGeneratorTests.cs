@@ -29,5 +29,42 @@ namespace SqlServerTddHelper_UnitTests
             Assert.Throws<TSqlDeploymentException>( () => DeploymentScriptGenerator.BuildDropStatment("create table test (a int, b int)"));
         }
 
+
+        [Test]
+        public void escape_identifier_escapes_name()
+        {
+            const string identifier = "table name";
+            const string expected = "[table name]";
+
+            var actual = DeploymentScriptGenerator.EscapeIdentifier(identifier);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void escape_identifier_escapes_name_and_schema()
+        {
+
+            const string identifier = "schema.table name";
+            const string expected = "[schema].[table name]";
+
+            var actual = DeploymentScriptGenerator.EscapeIdentifier(identifier);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void escape_identifier_escapes_name_and_schema_and_db()
+        {
+
+            const string identifier = "database name.schema.table name";
+            const string expected = "[database name].[schema].[table name]";
+
+            var actual = DeploymentScriptGenerator.EscapeIdentifier(identifier);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+
     }
 }

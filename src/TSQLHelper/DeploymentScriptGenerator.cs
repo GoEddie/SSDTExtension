@@ -32,7 +32,7 @@ namespace TSQLHelper
                     throw new TSqlDeploymentException("Only stored procedure creates are currently supported");
             }
 
-            return string.Format(dropStatementFormat, viewName, GetLastPartOfName(name), dropCommand, name);
+            return string.Format(dropStatementFormat, viewName, GetLastPartOfName(name), dropCommand, EscapeIdentifier(name));
         }
 
         private static string CleanName(string name)
@@ -44,6 +44,28 @@ namespace TSQLHelper
         {
             var parts = procName.Replace("\"", "").Replace("[", "").Replace("]", "").Split(new[] { '.' });
             return parts[parts.Length - 1];
+        }
+
+        public static string EscapeIdentifier(string identifier)
+        {
+            var builder = new StringBuilder();
+            var parts = identifier.Split(new[] {'.'});
+            bool first = true;
+
+            foreach (var part in parts)
+            {
+                if (first)
+                {
+                    builder.AppendFormat("[{0}]",part);
+                    first = false;
+                }
+                else
+                {
+                    builder.AppendFormat(".[{0}]", part);
+                }
+            }
+
+            return builder.ToString();
         }
     }
 }
