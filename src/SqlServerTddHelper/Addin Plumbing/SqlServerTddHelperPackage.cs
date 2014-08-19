@@ -77,6 +77,13 @@ namespace GoEddieUk.SqlServerTddHelper
             try
             {
                 var project = GetCurrentProject();
+                var settings = Config.Configuration.GetSettings(project);
+                if (null == settings)
+                {
+                    OutputWindowMessage.WriteMessage("Cancelled");
+                    return;
+                }
+
                 ThreadPool.QueueUserWorkItem(GenerateScript, project);
             }
             catch (Exception)
@@ -228,7 +235,12 @@ namespace GoEddieUk.SqlServerTddHelper
             try
             {
                 var project = GetCurrentProject();
-
+                var settings = Config.Configuration.GetSettings(project);
+                if (null == settings)
+                {
+                    OutputWindowMessage.WriteMessage("Cancelled");
+                    return;
+                }
                 ThreadPool.QueueUserWorkItem(DeploySingleFile, project);
             }
             catch (Exception)
