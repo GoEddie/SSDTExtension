@@ -16,17 +16,31 @@ namespace SqlServerTddHelper_UnitTests
         public void Generate_drop_from_create_proc()
         {
             var result =
-                DeploymentScriptGenerator.BuildDropStatment(
+                DeploymentScriptGenerator.BuildDeploy(
                     "create procedure test as select 1 from test");
 
-            Assert.AreEqual("if exists (select * from sys.procedures where name = 'test')\r\n\tdrop procedure test\r\n", result);
+            Assert.AreEqual(@"if exists (select * from sys.procedures where object_id = object_id('test'))
+	drop procedure [test];
+GO
+create procedure test as select 1 from test", result);
+
+        }
+
+        [Test]
+        public void Generate_create_from_create_schema()
+        {
+            var result =
+                DeploymentScriptGenerator.BuildDeploy(
+                    "create schema [bloo blah blum]");
+
+            Assert.AreEqual("if not exists (select * from sys.schemas where name = 'bloo blah blum')\r\nbegin\r\n\texec sp_executesql N'create schema [bloo blah blum]'\r\nend\r\n", result);
 
         }
 
         [Test]
         public void throws_exception_on_non_create_proc_scripts()
         {
-            Assert.Throws<TSqlDeploymentException>( () => DeploymentScriptGenerator.BuildDropStatment("create table test (a int, b int)"));
+            Assert.Throws<TSqlDeploymentException>( () => DeploymentScriptGenerator.BuildDeploy("create table test (a int, b int)"));
         }
 
 

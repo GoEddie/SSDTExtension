@@ -37,8 +37,10 @@ namespace TSQLHelper
                 switch (a.TokenType)
                 {
                     case TSqlTokenType.Procedure:
+                    case TSqlTokenType.Schema:
                         result.Type = a.TokenType;
                         break;
+                    case TSqlTokenType.AsciiStringOrQuotedIdentifier:
                     case TSqlTokenType.QuotedIdentifier:
                     case TSqlTokenType.Identifier:
                     case TSqlTokenType.Dot:
@@ -47,7 +49,7 @@ namespace TSQLHelper
 
 
                         break;
-
+                    case TSqlTokenType.EndOfFile:
                     case TSqlTokenType.WhiteSpace:
                         if (inName)
                         {
@@ -58,54 +60,17 @@ namespace TSQLHelper
                 }
             }
 
+            if (result.Name == null)
+            {
+                throw new Exception(string.Format("could not get name from script. parsing error count: {0}, detail: {1}", errors.Count, get_errors(errors)));
+            }
+
             return new ScriptDetail();
         }
 
-        public string GetProcNameFromSqlFile(string filename)
-        {
-            var txtRdr = new StreamReader(filename);
-            var parser = new TSql110Parser(true);
+        
 
-            IList<ParseError> errors;
-            var sqlFragment = parser.Parse(txtRdr, out errors);
-            
-            var inName = false;
-            var name = "";
-
-            foreach (var a in sqlFragment.ScriptTokenStream)
-            {
-                
-                switch (a.TokenType)
-                {
-                    case TSqlTokenType.Procedure:
-                      
-                        break;
-                    case TSqlTokenType.QuotedIdentifier:
-                    case TSqlTokenType.Identifier:
-                    case TSqlTokenType.Dot:
-                        inName = true;
-                        name += a.Text;
-
-
-                        break;
-
-                    case TSqlTokenType.WhiteSpace:
-                        if (inName)
-                            return name;
-                        break;
-                    default:
-                      
-                        break;
-                }
-
-            }
-
-            var errorMessage = "could not find proc name, are these errors anything to do with it?: " + get_errors(errors);
-            throw new Exception(errorMessage);
-        }
-
-
-        string get_errors(IEnumerable<ParseError> errors)
+        static string get_errors(IEnumerable<ParseError> errors)
         {
             return errors.Aggregate("", (current, err) => current + (" + " + err.Message));
         }

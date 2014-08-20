@@ -8,31 +8,30 @@ namespace TSQLHelper
 {
     public class DeploymentScriptGenerator
     {
-        public static string BuildDropStatment(string createStatement)
+        public static string BuildDeploy(string createStatement)
         {
             var scriptType = ScriptProperties.GetScriptDetail(createStatement);
 
-            const string dropStatementFormat =
-                "if exists (select * from {0} where name = '{1}')\r\n\t{2} {3}\r\n";
 
             var name = CleanName(scriptType.Name);
-            var viewName = "";
-            var dropCommand = "";
+
 
             switch (scriptType.Type)
             {
                 case TSqlTokenType.Proc:
                 case TSqlTokenType.Procedure:
 
-                    viewName = "sys.procedures";
-                    dropCommand = "drop procedure";
+                    return string.Format("if exists (select * from sys.procedures where object_id = object_id('{0}'))\r\n\tdrop procedure {1};\r\nGO\r\n{2}", name, EscapeIdentifier(name), createStatement);
 
-                    break;
+                case TSqlTokenType.Schema:
+                    
+                    return string.Format("if not exists (select * from sys.schemas where name = '{0}')\r\nbegin\r\n\texec sp_executesql N'{1}'\r\nend\r\n", name, createStatement);
+                    
                 default:
                     throw new TSqlDeploymentException("Only stored procedure creates are currently supported");
             }
 
-            return string.Format(dropStatementFormat, viewName, GetLastPartOfName(name), dropCommand, EscapeIdentifier(name));
+            
         }
 
         private static string CleanName(string name)

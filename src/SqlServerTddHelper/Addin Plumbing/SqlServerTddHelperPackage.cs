@@ -86,9 +86,9 @@ namespace GoEddieUk.SqlServerTddHelper
 
                 ThreadPool.QueueUserWorkItem(GenerateScript, project);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                OutputWindowMessage.WriteMessage("Unable to generate script");
+                OutputWindowMessage.WriteMessage("Unable to generate script error: " + ex.Message);
             }
         }
 
@@ -112,7 +112,7 @@ namespace GoEddieUk.SqlServerTddHelper
                     return;
                 }
 
-                var procname = new ScriptProperties().GetProcNameFromSqlFile(filename);
+                var procname = ScriptProperties.GetScriptDetail(File.ReadAllText(filename)).Name;
                 if (string.IsNullOrEmpty(procname))
                 {
                     OutputWindowMessage.WriteMessage("Couldn't GetConfig proc name - boo hoo hoo");
@@ -123,9 +123,9 @@ namespace GoEddieUk.SqlServerTddHelper
                 WriteDeployFile(project.FullName, procname, filename, settings.DeploymentFolder);
                 
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                OutputWindowMessage.WriteMessage("Unable to generate script");
+                OutputWindowMessage.WriteMessage("Unable to generate script: " + e.Message);
             }
         }
 
@@ -146,10 +146,8 @@ namespace GoEddieUk.SqlServerTddHelper
             }
 
             var outputScript = new StringBuilder();
-            outputScript.AppendFormat(DeploymentScriptGenerator.BuildDropStatment(script));
-            outputScript.AppendLine("\r\nGO\r\n");
-            outputScript.AppendFormat(script);
-
+            outputScript.AppendFormat(DeploymentScriptGenerator.BuildDeploy(script));
+            
             string outputScriptPath = Path.Combine(outputDir,
                 string.Format("{0}.sql", DeploymentScriptGenerator.GetLastPartOfName(procName)));
 
@@ -273,7 +271,7 @@ namespace GoEddieUk.SqlServerTddHelper
                     return;
                 }
 
-                var procname = new ScriptProperties().GetProcNameFromSqlFile(filename);
+                var procname = ScriptProperties.GetScriptDetail(File.ReadAllText(filename)).Name;
 
                 if (string.IsNullOrEmpty(procname))
                 {
@@ -299,8 +297,12 @@ namespace GoEddieUk.SqlServerTddHelper
                 {
                     try
                     {
-                        new SqlGateway(settings.ConnectionString).Execute(DeploymentScriptGenerator.BuildDropStatment(fileContents));
-                        new SqlGateway(settings.ConnectionString).Execute(fileContents);
+                        var script = DeploymentScriptGenerator.BuildDeploy(fileContents);
+                        var batches = script.Split( new string[] {"\r\nGO\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var batch in batches)
+                        {
+                            new SqlGateway(settings.ConnectionString).Execute(batch);
+                        }
 
                         scope.Complete();
 
@@ -318,9 +320,9 @@ namespace GoEddieUk.SqlServerTddHelper
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                OutputWindowMessage.WriteMessage("Deploying file Failed");
+                OutputWindowMessage.WriteMessage("Deploying file Failed: " + e.Message);
             }
 
         }
