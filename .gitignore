@@ -3,3 +3,5 @@
 **/release/**
 **/debug/**
 *.suo
+*dotsett*
+*.suo
