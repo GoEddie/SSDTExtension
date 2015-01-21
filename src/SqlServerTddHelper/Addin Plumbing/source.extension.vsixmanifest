@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="9f7c9d51-7c17-4f58-bd49-8ee02b5e91c1" Version="0.4.1" Language="en-US" Publisher="GoEddieUk" />
+    <Identity Id="9f7c9d51-7c17-4f58-bd49-8ee02b5e91c1" Version="0.4.2" Language="en-US" Publisher="GoEddieUk" />
     <DisplayName>SqlServerTddHelper</DisplayName>
     <Description>VS Package to help write T-Sql code using TDD in SSDT projects</Description>
     <MoreInfo>http://github.com/GoEddie/SSDTExtender</MoreInfo>
